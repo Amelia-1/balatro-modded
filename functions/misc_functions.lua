@@ -618,7 +618,6 @@ function get_straight(hand)
   for j = 1, 14 do
     local check_id = j
     if j == 1 then check_id = 14 end
-    if j == 14 then check_id = 0 end 
 
     if IDS[check_id] then
       straight_length = straight_length + 1
@@ -626,9 +625,11 @@ function get_straight(hand)
       for k, v in ipairs(IDS[check_id]) do
         t[#t+1] = v
       end
-    elseif crazy > 0 and crazy_used < crazy then
+    elseif crazy > 0 and crazy_used < crazy and j > 1 then
       crazy_used = crazy_used + 1
-      t[#t+1] = crazy_cards[crazy_used] 
+      straight_length = straight_length + 1
+      skipped_rank = false                   
+      t[#t+1] = crazy_cards[crazy_used]
     elseif can_skip and not skipped_rank and j ~= 14 then
       skipped_rank = true
     else
