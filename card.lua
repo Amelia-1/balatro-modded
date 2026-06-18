@@ -954,17 +954,29 @@ function Card:get_nominal(mod)
     return self.base.nominal + self.base.suit_nominal*mult + (self.base.suit_nominal_original or 0)*0.0001*mult + self.base.face_nominal + 0.000001*self.unique_val
 end
 
+
 function Card:get_id()
     if self.ability.effect == 'Stone Card' and not self.vampired then
         return -math.random(100, 1000000)
     end
+    if self.ability.effect == "Crazy Card" and not self.vampired then
+        return 15
+    end
     return self.base.id
 end
+
+function Card:is_crazy()
+    if self.debuff then return false end
+    if self.ability.effect == "Crazy Card" and not self.vampired then
+        return true
+    end
+end
+    
 
 function Card:is_face(from_boss)
     if self.debuff and not from_boss then return end
     local id = self:get_id()
-    if id == 11 or id == 12 or id == 13 or next(find_joker("Pareidolia")) then
+    if id == 11 or id == 12 or id == 13 or id == 15 or next(find_joker("Pareidolia")) then
         return true
     end
 end
@@ -3104,7 +3116,7 @@ function Card:calculate_joker(context)
                     end
                 end
                 if self.ability.name == '8 Ball' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
-                    if (context.other_card:get_id() == 8) and (pseudorandom('8ball') < G.GAME.probabilities.normal/self.ability.extra) then
+                    if ((context.other_card:get_id() == 8 or context) or (context.other_card:get_id() == 15 or context)) and (pseudorandom('8ball') < G.GAME.probabilities.normal/self.ability.extra) then
                         G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
                         return {
                             extra = {focus = self, message = localize('k_plus_tarot'), func = function()
@@ -3260,7 +3272,7 @@ function Card:calculate_joker(context)
                     }
                 end
                 if self.ability.name == 'Triboulet' and
-                    (context.other_card:get_id() == 12 or context.other_card:get_id() == 13) then
+                    (context.other_card:get_id() == 12 or context.other_card:get_id() == 13 or context.other_card:get_id() == 15) then
                         return {
                             x_mult = self.ability.extra,
                             colour = G.C.RED,
@@ -3270,7 +3282,7 @@ function Card:calculate_joker(context)
             end
             if context.cardarea == G.hand then
                     if self.ability.name == 'Shoot the Moon' and
-                        context.other_card:get_id() == 12 then
+                        context.other_card:get_id() == 12 or context.other_card:get_id() == 15 then
                         if context.other_card.debuff then
                             return {
                                 message = localize('k_debuffed'),
@@ -3285,7 +3297,7 @@ function Card:calculate_joker(context)
                         end
                     end
                     if self.ability.name == 'Baron' and
-                        context.other_card:get_id() == 13 then
+                        context.other_card:get_id() == 13 or context.other_card:get_id() == 15 then
                         if context.other_card.debuff then
                             return {
                                 message = localize('k_debuffed'),
@@ -3375,7 +3387,8 @@ function Card:calculate_joker(context)
                 context.other_card:get_id() == 2 or 
                 context.other_card:get_id() == 3 or 
                 context.other_card:get_id() == 4 or 
-                context.other_card:get_id() == 5) then
+                context.other_card:get_id() == 5 or
+                context.other_card:is_crazy()) then
                     return {
                         message = localize('k_again_ex'),
                         repetitions = self.ability.extra,

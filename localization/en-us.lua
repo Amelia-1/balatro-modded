@@ -2982,6 +2982,14 @@ return {
                     "to {V:1}#2#{}",
                 },
             },
+            c_insanity={
+                name="Insanity",
+                text={
+                    "Enhances {C:attention}#1#",
+                    "selected cards to",
+                    "{C:attention}#2#s",
+                },
+            },
         },
         Voucher={
             v_antimatter={

@@ -3578,7 +3578,7 @@ function create_UIBox_your_collection_tarots()
   local deck_tables = {}
 
   G.your_collection = {}
-  for j = 1, 2 do
+  for j = 1, 3 do
     G.your_collection[j] = CardArea(
       G.ROOM.T.x + 0.2*G.ROOM.T.w/2,G.ROOM.T.h,
       (4.25+j)*G.CARD_W,
