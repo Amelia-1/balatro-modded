@@ -414,14 +414,27 @@ function evaluate_poker_hand(hand)
     local fh_hand = {}
     local fh_3 = parts._3[1]
     local fh_2 = parts._2[1]
-    for i=1, #fh_3 do
-      fh_hand[#fh_hand+1] = fh_3[i]
+
+
+    --wildcard fix
+    local overlap = false
+    for _, c3 in ipairs(fh_3) do
+      for _, c2 in ipairs(fh_2) do
+        if c3 == c2 then overlap = true end
+      end
     end
-    for i=1, #fh_2 do
-      fh_hand[#fh_hand+1] = fh_2[i]
+
+  
+    if not overlap then
+      for i=1, #fh_3 do
+        fh_hand[#fh_hand+1] = fh_3[i]
+      end
+      for i=1, #fh_2 do
+        fh_hand[#fh_hand+1] = fh_2[i]
+      end
+      table.insert(results["Flush House"], fh_hand)
+      if not results.top then results.top = results["Flush House"] end
     end
-    table.insert(results["Flush House"], fh_hand)
-    if not results.top then results.top = results["Flush House"] end
   end
 
   if next(parts._5) then
@@ -493,21 +506,33 @@ function evaluate_poker_hand(hand)
   end
 
   if (#parts._2 == 2) or (#parts._3 == 1 and #parts._2 == 1) then
-    local fh_hand = {}
     local r = parts._2
     local fh_2a = r[1]
     local fh_2b = r[2]
     if not fh_2b then 
       fh_2b = parts._3[1]
     end
-    for i=1, #fh_2a do
-      fh_hand[#fh_hand+1] = fh_2a[i]
+
+    --wildcard fix
+    local overlap = false
+    for _, c1 in ipairs(fh_2a) do
+      for _, c2 in ipairs(fh_2b) do
+        if c1 == c2 then overlap = true end
+      end
     end
-    for i=1, #fh_2b do
-      fh_hand[#fh_hand+1] = fh_2b[i]
+
+  
+    if not overlap then
+      local fh_hand = {}
+      for i=1, #fh_2a do
+        fh_hand[#fh_hand+1] = fh_2a[i]
+      end
+      for i=1, #fh_2b do
+        fh_hand[#fh_hand+1] = fh_2b[i]
+      end
+      table.insert(results["Two Pair"], fh_hand)
+      if not results.top then results.top = results["Two Pair"] end
     end
-    table.insert(results["Two Pair"], fh_hand)
-    if not results.top then results.top = results["Two Pair"] end
   end
 
   if next(parts._2) then
@@ -563,56 +588,64 @@ end
 
 function get_straight(hand)
   local ret = {}
-  local crazy = 0
   local four_fingers = next(find_joker('Four Fingers'))
-  if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret else
-    local t = {}
-    local IDS = {}
-    for i=1, #hand do
-      local id = hand[i]:get_id()
-      if id > 1 and id < 15 then
-        if IDS[id] then
-          IDS[id][#IDS[id]+1] = hand[i]
-        else
-          IDS[id] = {hand[i]}
-        end
-      end
-      if id == 15 then
-        crazy = crazy + 1
-      end
-    end
+  if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret end
 
-    local straight_length = 0
-    local straight = false
-    local can_skip = next(find_joker('Shortcut')) 
-    local skipped_rank = false
-    local crazy_used = 0
-    
+  local t = {}
+  local IDS = {}
+  local crazy_cards = {} 
 
-    for j = 1, 14 do
-      if IDS[j == 1 and 14 or j] then
-        straight_length = straight_length + 1
-        skipped_rank = false
-        for k, v in ipairs(IDS[j == 1 and 14 or j]) do
-          t[#t+1] = v
-        end
-      elseif crazy > 0 and crazy_used < crazy then
-          crazy_used = crazy_used + 1
-      elseif can_skip and not skipped_rank and j ~= 14 then
-          skipped_rank = true
-      
+  for i=1, #hand do
+    local id = hand[i]:get_id()
+    if id > 1 and id < 15 then
+      if IDS[id] then
+        IDS[id][#IDS[id]+1] = hand[i]
       else
-        straight_length = 0
-        skipped_rank = false
-        if not straight then t = {} end
-        if straight then break end
+        IDS[id] = {hand[i]}
       end
-      if straight_length >= (5 - (four_fingers and 1 or 0) - crazy) then straight = true end 
+    elseif id == 15 then
+      table.insert(crazy_cards, hand[i]) 
     end
-    if not straight then return ret end
-    table.insert(ret, t)
-    return ret
   end
+
+  local crazy = #crazy_cards
+  local straight_length = 0
+  local straight = false
+  local can_skip = next(find_joker('Shortcut')) 
+  local skipped_rank = false
+  local crazy_used = 0
+
+  for j = 1, 14 do
+    local check_id = j
+    if j == 1 then check_id = 14 end
+    if j == 14 then check_id = 0 end 
+
+    if IDS[check_id] then
+      straight_length = straight_length + 1
+      skipped_rank = false
+      for k, v in ipairs(IDS[check_id]) do
+        t[#t+1] = v
+      end
+    elseif crazy > 0 and crazy_used < crazy then
+      crazy_used = crazy_used + 1
+      t[#t+1] = crazy_cards[crazy_used] 
+    elseif can_skip and not skipped_rank and j ~= 14 then
+      skipped_rank = true
+    else
+      straight_length = 0
+      skipped_rank = false
+      if not straight then t = {} end
+      if straight then break end
+    end
+
+    if straight_length >= (5 - (four_fingers and 1 or 0) - crazy) then 
+      straight = true 
+    end 
+  end
+
+  if not straight then return ret end
+  table.insert(ret, t)
+  return ret
 end
 
 function get_X_same(num, hand)
