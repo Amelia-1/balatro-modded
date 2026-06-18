@@ -416,7 +416,7 @@ function evaluate_poker_hand(hand)
     local fh_2 = parts._2[1]
 
 
-    --wildcard fix
+    --crazy fix
     local overlap = false
     for _, c3 in ipairs(fh_3) do
       for _, c2 in ipairs(fh_2) do
@@ -589,12 +589,14 @@ end
 function get_straight(hand)
   local ret = {}
   local four_fingers = next(find_joker('Four Fingers'))
-  if #hand > 5 or #hand < (5 - (four_fingers and 1 or 0)) then return ret end
+  local target_length = 5 - (four_fingers and 1 or 0)
+  
+  if #hand > 5 or #hand < target_length then return ret end
 
-  local t = {}
   local IDS = {}
-  local crazy_cards = {} 
+  local crazy_cards = {}
 
+  
   for i=1, #hand do
     local id = hand[i]:get_id()
     if id > 1 and id < 15 then
@@ -604,48 +606,79 @@ function get_straight(hand)
         IDS[id] = {hand[i]}
       end
     elseif id == 15 then
-      table.insert(crazy_cards, hand[i]) 
+      table.insert(crazy_cards, hand[i])
     end
   end
 
-  local crazy = #crazy_cards
-  local straight_length = 0
-  local straight = false
   local can_skip = next(find_joker('Shortcut')) 
-  local skipped_rank = false
-  local crazy_used = 0
+  local crazy_total = #crazy_cards
 
-  for j = 1, 14 do
-    local check_id = j
-    if j == 1 then check_id = 14 end
-
-    if IDS[check_id] then
-      straight_length = straight_length + 1
-      skipped_rank = false
-      for k, v in ipairs(IDS[check_id]) do
-        t[#t+1] = v
-      end
-    elseif crazy > 0 and crazy_used < crazy and j > 1 then
-      crazy_used = crazy_used + 1
-      straight_length = straight_length + 1
-      skipped_rank = false                   
-      t[#t+1] = crazy_cards[crazy_used]
-    elseif can_skip and not skipped_rank and j ~= 14 then
-      skipped_rank = true
-    else
-      straight_length = 0
-      skipped_rank = false
-      if not straight then t = {} end
-      if straight then break end
-    end
-
-    if straight_length >= (5 - (four_fingers and 1 or 0) - crazy) then 
-      straight = true 
-    end 
+  
+  local R = {14, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14}
+  
+  local best_t = nil
+  
+  
+  local function get_diff(current, last)
+    if last == 14 then return current - 1 end
+    return current - last
   end
 
-  if not straight then return ret end
-  table.insert(ret, t)
+  
+  local function search(r_idx, current_t, crazy_used, last_rank)
+    if #current_t == target_length then
+      best_t = current_t
+      return true
+    end
+    
+    if r_idx > 14 then return false end
+    
+    local rank = R[r_idx]
+    
+    local has_card = IDS[rank] and #IDS[rank] > 0
+    local has_wild = crazy_used < crazy_total
+    
+    
+    if has_card or has_wild then
+      local valid_step = false
+      if last_rank == nil then
+        valid_step = true
+      else
+        local diff = get_diff(rank, last_rank)
+        if diff == 1 then
+          valid_step = true
+        elseif diff == 2 and can_skip then
+          valid_step = true 
+        end
+      end
+      
+      if valid_step then
+        local new_t = {}
+        for i=1, #current_t do new_t[i] = current_t[i] end
+        
+        local new_crazy = crazy_used
+        if has_card then
+          table.insert(new_t, IDS[rank][1]) 
+        else
+          table.insert(new_t, crazy_cards[crazy_used + 1])
+          new_crazy = crazy_used + 1
+        end
+        
+        if search(r_idx + 1, new_t, new_crazy, rank) then return true end
+      end
+    end
+    
+    
+    if search(r_idx + 1, current_t, crazy_used, last_rank) then return true end
+    
+    return false
+  end
+  
+  search(1, {}, 0, nil)
+  
+  if best_t then
+    table.insert(ret, best_t)
+  end
   return ret
 end
 

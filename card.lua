@@ -2613,7 +2613,7 @@ function Card:calculate_joker(context)
             end
             return
         elseif context.destroying_card and not context.blueprint then
-            if self.ability.name == 'Sixth Sense' and #context.full_hand == 1 and context.full_hand[1]:get_id() == 6 and G.GAME.current_round.hands_played == 0 then
+            if self.ability.name == 'Sixth Sense' and #context.full_hand == 1 and (context.full_hand[1]:get_id() == 6 or context.full_hand[1]:get_id() == 15) and G.GAME.current_round.hands_played == 0 then
                 if #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
                     G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
                     G.E_MANAGER:add_event(Event({
@@ -2836,7 +2836,7 @@ function Card:calculate_joker(context)
             end
             if self.ability.name == 'Mail-In Rebate' and
             not context.other_card.debuff and
-            context.other_card:get_id() == G.GAME.current_round.mail_card.id then
+            (context.other_card:get_id() == G.GAME.current_round.mail_card.id or context.other_card:get_id() == 15) then
                 ease_dollars(self.ability.extra)
                 return {
                     message = localize('$')..self.ability.extra,
@@ -2846,7 +2846,7 @@ function Card:calculate_joker(context)
             end
             if self.ability.name == 'Hit the Road' and
             not context.other_card.debuff and
-            context.other_card:get_id() == 11 and not context.blueprint then
+            (context.other_card:get_id() == 11 or context.other_card:get_id() == 15) and not context.blueprint then
                 self.ability.x_mult = self.ability.x_mult + self.ability.extra
                 return {
                     message = localize{type='variable',key='a_xmult',vars={self.ability.x_mult}},
@@ -3093,7 +3093,7 @@ function Card:calculate_joker(context)
                     }
                 end
                 if self.ability.name == 'Wee Joker' and
-                    context.other_card:get_id() == 2 and not context.blueprint then
+                    (context.other_card:get_id() == 2 or context.other_card:get_id() == 15) and not context.blueprint then
                         self.ability.extra.chips = self.ability.extra.chips + self.ability.extra.chip_mod
                         
                         return {
@@ -3177,7 +3177,7 @@ function Card:calculate_joker(context)
                         }
                     end
                 if self.ability.name == 'Walkie Talkie' and
-                (context.other_card:get_id() == 10 or context.other_card:get_id() == 4) then
+                (context.other_card:get_id() == 10 or context.other_card:get_id() == 4 or context.other_card:get_id() == 15) then
                     return {
                         chips = self.ability.extra.chips,
                         mult = self.ability.extra.mult,
@@ -3199,6 +3199,7 @@ function Card:calculate_joker(context)
                 context.other_card:get_id() == 3 or 
                 context.other_card:get_id() == 5 or 
                 context.other_card:get_id() == 8 or 
+                context.other_card:get_id() == 15 or
                 context.other_card:get_id() == 14) then
                     return {
                         mult = self.ability.extra,
@@ -3206,9 +3207,10 @@ function Card:calculate_joker(context)
                     }
                 end
                 if self.ability.name == 'Even Steven' and
-                context.other_card:get_id() <= 10 and 
+                (context.other_card:get_id() == 15) or
+                (context.other_card:get_id() <= 10 and 
                 context.other_card:get_id() >= 0 and
-                context.other_card:get_id()%2 == 0
+                context.other_card:get_id()%2 == 0)
                 then
                     return {
                         mult = self.ability.extra,
@@ -3216,6 +3218,7 @@ function Card:calculate_joker(context)
                     }
                 end
                 if self.ability.name == 'Odd Todd' and
+                (context.other_card:get_id() == 15) or
                 ((context.other_card:get_id() <= 10 and 
                 context.other_card:get_id() >= 0 and
                 context.other_card:get_id()%2 == 1) or
@@ -3775,7 +3778,7 @@ function Card:calculate_joker(context)
                         if self.ability.name == 'Superposition' and #G.consumeables.cards + G.GAME.consumeable_buffer < G.consumeables.config.card_limit then
                             local aces = 0
                             for i = 1, #context.scoring_hand do
-                                if context.scoring_hand[i]:get_id() == 14 then aces = aces + 1 end
+                                if (context.scoring_hand[i]:get_id() == 14 or context.scoring_hand[i]:get_id() == 15) then aces = aces + 1 end
                             end
                             if aces >= 1 and next(context.poker_hands["Straight"]) then
                                 local card_type = 'Tarot'
@@ -4204,7 +4207,7 @@ function Card:update(dt)
         if self.ability.name == "Cloud 9" then 
             self.ability.nine_tally = 0
             for k, v in pairs(G.playing_cards) do
-                if v:get_id() == 9 then self.ability.nine_tally = self.ability.nine_tally+1 end
+                if (v:get_id() == 9 or v:get_id() == 15) then self.ability.nine_tally = self.ability.nine_tally+1 end
             end
         end
         if self.ability.name == "Stone Joker" then 

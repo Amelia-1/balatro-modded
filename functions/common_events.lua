@@ -632,6 +632,22 @@ function eval_card(card, context)
             ret.x_mult = h_x_mult
         end
 
+        if card:is_crazy() then
+            G.E_MANAGER:add_event(Event({
+                trigger = 'after',
+                delay = 0.2, 
+                func = function()
+                    card:start_dissolve()
+                    return true
+                end
+            }))
+    
+            return {
+                message = 'Destroyed!',
+                colour = G.C.RED
+            }
+        end
+
         local jokers = card:calculate_joker(context)
         if jokers then 
             ret.jokers = jokers

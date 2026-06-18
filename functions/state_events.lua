@@ -962,6 +962,8 @@ G.FUNCS.evaluate_play = function(e)
                 destroyed = true
             end
 
+            
+
             if destroyed then 
                 if scoring_hand[i].ability.name == 'Glass Card' then 
                     scoring_hand[i].shattered = true
