@@ -3823,9 +3823,9 @@ function create_UIBox_your_collection_enhancements(exit)
     )
   end
 
-  for i = 1, 4 do
+  for i = 1, 5 do
     for j = 1, #G.your_collection do
-      local center = G.P_CENTER_POOLS["Enhanced"][i+(j-1)*4]
+      local center = G.P_CENTER_POOLS["Enhanced"][i+(j-1)*5]
       local card = Card(G.your_collection[j].T.x + G.your_collection[j].T.w/2, G.your_collection[j].T.y, G.CARD_W, G.CARD_H, G.P_CARDS.empty, center)
       G.your_collection[j]:emplace(card)
     end

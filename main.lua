@@ -87,7 +87,7 @@ function love.load()
 	G:start_up()
 	--Steam integration
 	local os = love.system.getOS()
-	if os == 'OS X' or os == 'Windows' then 
+	if os == 'OS X' or os == 'a' then 
 		local st = nil
 		--To control when steam communication happens, make sure to send updates to steam as little as possible
 		if os == 'OS X' then

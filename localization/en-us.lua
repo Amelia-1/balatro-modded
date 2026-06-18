@@ -430,6 +430,19 @@ return {
                     "as any suit",
                 },
             },
+            m_crazy={
+                name="Crazy Card",
+                text={
+                    "Can be used",
+                    "as any rank",
+                },
+            },
+            m_nothing={
+                name="Nothing Card",
+                text={
+                    "Testing, Please ignore",
+                },
+            },
         },
         Joker={
             j_8_ball={
